@@ -142,7 +142,7 @@
                 </div>
                 <div class="inline-field">
                     <label for="ttsSpeed">TTS speed</label>
-                    <input type="range" id="ttsSpeed" min="0.6" max="1.2" step="0.1" value="0.85">
+                    <input type="range" id="ttsSpeed" min="0.85" max="1.15" step="0.05" value="0.85">
                     <span class="small" id="ttsSpeedValue">0.85x</span>
                 </div>
             </div>
