@@ -27,69 +27,19 @@
     const catAvatarWrap = document.getElementById('catAvatarWrap');
     const avatarStateLabel = document.getElementById('avatarStateLabel');
 
-    const PERSONAS = {
-        billu: {
-            name: 'Billu (Cat Teacher)',
-            type: 'cat',
-            description: 'Friendly cat teacher for kids.',
-            context: 'You are Billu, a friendly cat teacher for a 1st standard kid. Explain clearly, kindly, and in very simple words. Keep answers short and age-appropriate.',
-            tts: { model: 'timbre-v2.5', voice: 'Kaveri', language: 'en-IN', speed: 0.85 }
-        },
-        father: {
-            name: 'Father (Sandeep)',
-            type: 'image',
-            image: 'assets/images/sandeep.jpeg',
-            mouth: { top: '60%', left: '50%', width: '10%', height: '4%' },
-            description: 'Caring, practical, and supportive father figure.',
-            context: 'You are Sandeep, a caring and practical father. Speak warmly, encourage confidence, give clear guidance, and keep answers supportive and easy to understand. Offer sensible advice and reassurance when helpful.',
-            tts: { model: 'timbre-v3.0', voice: 'Prakash', language: 'hi-IN', speed: 0.95 }
-        },
-        mother: {
-            name: 'Mother (Leelavati)',
-            type: 'image',
-            image: 'assets/images/lilavati.png',
-            mouth: { top: '59%', left: '52%', width: '10%', height: '4%' },
-            description: 'Loving, patient, and nurturing mother figure.',
-            context: 'You are Leelavati, a loving and patient mother. Speak gently with warmth and care, explain things simply, comfort when needed, and encourage with kindness.',
-            tts: { model: 'timbre-v3.0', voice: 'Vasudha', language: 'en-IN', speed: 0.9 }
-        },
-        teacher: {
-            name: 'Teacher',
-            type: 'image',
-            description: 'Patient teacher who explains concepts step by step.',
-            context: 'You are a patient and encouraging indian teacher. Explain concepts step by step in simple language, check understanding, give examples, and keep responses clear and structured.',
-            tts: { model: 'timbre-v2.5', voice: 'Nalini', language: 'hi-IN', speed: 0.9 }
-        },
-        scientist: {
-            name: 'Scientist',
-            type: 'image',
-            image: 'assets/images/scientist.png',
-            mouth: { top: '34.3%', left: '68%', width: '9%', height: '2%' },
-            description: 'Curious scientist who explains how things work.',
-            context: 'You are a curious and friendly female indian scientist. Explain how and why things work using simple reasoning, observations, and examples. Encourage curiosity and keep explanations accurate but easy to understand.',
-            tts: { model: 'timbre-v3.0', voice: 'Nalini', language: 'en-IN', speed: 0.95 }
-        },
-        engineer: {
-            name: 'Engineer',
-            type: 'image',
-            image: 'assets/images/enineer.png',
-            mouth: { top: '36%', left: '45%', width: '7%', height: '2%' },
-            description: 'Practical engineer focused on building and solving problems.',
-            context: 'You are a practical and clear-thinking female indian engineer. Focus on how to build, fix, and solve problems step by step. Give structured, actionable explanations and keep them easy to follow.',
-            tts: { model: 'timbre-v3.0', voice: 'Chetana', language: 'en-IN', speed: 1.0 }
-        },
-        doctor: {
-            name: 'Doctor',
-            type: 'image',
-            image: 'assets/images/doctor.png',
-            mouth: { top: '35.2%', left: '49%', width: '9%', height: '2%' },
-            description: 'Caring doctor who explains health clearly and calmly.',
-            context: 'You are a caring and knowledgeable female doctor. Explain health, wellness, and medical topics clearly, calmly, and simply. Be reassuring, encourage healthy habits, and remind users to consult a qualified healthcare professional for diagnosis, treatment, or urgent concerns.',
-            tts: { model: 'timbre-v3.0', voice: 'Chetana', language: 'en-IN', speed: 0.95 }
+    function getPersonaDeps() {
+        return {
+            contextEl, appTitleEl, personaDesc, photoMouth, catAvatarWrap, personaPhotoWrap, personaImage,
+            ttsModelEl, syncTtsVoices, ttsLanguageEl, ttsSpeedEl, ttsSpeedValueEl,
+            setStatus, log, setAvatarState,
+            clearHistory: clearConversationState
+        };
+    }
+    function applyPersona(id, clearHistory) {
+        if (window.Personas && typeof window.Personas.apply === 'function') {
+            return window.Personas.apply(id, clearHistory, getPersonaDeps());
         }
-    };
-
-    let currentPersonaId = 'billu';
+    }
 
     const TTS_VOICES = {
         'timbre-v2.5': [
@@ -141,56 +91,12 @@
         }
     }
 
-    function applyPersona(id, clearHistory) {
-        const p = PERSONAS[id] || PERSONAS.billu;
-        currentPersonaId = id in PERSONAS ? id : 'billu';
-        if (contextEl) contextEl.value = p.context;
-        if (appTitleEl) appTitleEl.textContent = p.name + ' Chat';
-        if (personaDesc) personaDesc.textContent = p.description || '';
-        if (photoMouth) {
-            const m = p.mouth || {};
-            photoMouth.style.top = m.top || '72%';
-            photoMouth.style.left = m.left || '50%';
-            photoMouth.style.width = m.width || '16%';
-            photoMouth.style.height = m.height || '4%';
-        }
-        if (p.type === 'cat') {
-            if (catAvatarWrap) catAvatarWrap.style.display = '';
-            if (personaPhotoWrap) personaPhotoWrap.style.display = 'none';
-            if (personaImage) { personaImage.removeAttribute('src'); personaImage.alt = ''; }
-        } else {
-            if (catAvatarWrap) catAvatarWrap.style.display = 'none';
-            if (personaPhotoWrap) {
-                if (p.image) {
-                    if (personaImage) { personaImage.src = p.image; personaImage.alt = p.name; }
-                    personaPhotoWrap.style.display = '';
-                } else {
-                    if (personaImage) { personaImage.removeAttribute('src'); personaImage.alt = p.name; }
-                    personaPhotoWrap.style.display = 'none';
-                }
-            }
-        }
-        if (p.tts) {
-            if (ttsModelEl) ttsModelEl.value = p.tts.model || ttsModelEl.value;
-            syncTtsVoices(p.tts.voice);
-            if (p.tts.language && ttsLanguageEl && ttsLanguageEl.querySelector('option[value="' + p.tts.language + '"]')) {
-                ttsLanguageEl.value = p.tts.language;
-            }
-            if (p.tts.speed && ttsSpeedEl) {
-                ttsSpeedEl.value = String(p.tts.speed);
-                if (ttsSpeedValueEl) ttsSpeedValueEl.textContent = ttsSpeedEl.value + 'x';
-            }
-        }
-        if (clearHistory) {
-            history = [];
-            if (conversationEl) conversationEl.value = '';
-            if (player) { player.pause(); player.removeAttribute('src'); }
-            if (ttsAudioUrl) { URL.revokeObjectURL(ttsAudioUrl); ttsAudioUrl = null; }
-            if (replayBtn) { replayBtn.style.display = 'none'; replayBtn.disabled = false; }
-        }
-        setStatus('Persona set to ' + p.name + '. Ready.');
-        log('persona switched to ' + p.name);
-        setAvatarState('idle');
+    function clearConversationState() {
+        history = [];
+        if (conversationEl) conversationEl.value = '';
+        if (player) { player.pause(); player.removeAttribute('src'); }
+        if (ttsAudioUrl) { URL.revokeObjectURL(ttsAudioUrl); ttsAudioUrl = null; }
+        if (replayBtn) { replayBtn.style.display = 'none'; replayBtn.disabled = false; }
     }
     const micSelect = document.getElementById('micSelect');
     const testMicBtn = document.getElementById('testMicBtn');
@@ -249,7 +155,7 @@
         console.log(line);
     }
     function appendConversation(role, text) {
-        const p = PERSONAS[currentPersonaId] || PERSONAS.billu;
+        const p = (window.Personas && Personas.getCurrent) ? Personas.getCurrent() : { name: 'Assistant' };
         const label = role === 'user' ? 'You' : (role === 'assistant' ? p.name : 'System');
         conversationEl.value += label + ': ' + text + '\n\n';
         conversationEl.scrollTop = conversationEl.scrollHeight;
@@ -927,12 +833,7 @@
     ttsSpeedEl.addEventListener('input', () => { ttsSpeedValueEl.textContent = ttsSpeedEl.value + 'x'; });
     clearBtn.addEventListener('click', () => {
         if (mediaRecorder && mediaRecorder.state !== 'inactive') return;
-        history = [];
-        conversationEl.value = '';
-        player.pause();
-        player.removeAttribute('src');
-        if (ttsAudioUrl) { URL.revokeObjectURL(ttsAudioUrl); ttsAudioUrl = null; }
-        if (replayBtn) { replayBtn.style.display = 'none'; replayBtn.disabled = false; }
+        clearConversationState();
         setStatus('Conversation cleared. Ready.');
         log('conversation cleared');
     });
@@ -984,7 +885,7 @@
 
     function setAvatarState(state) {
         avatarState = state;
-        const p = PERSONAS[currentPersonaId] || PERSONAS.billu;
+        const p = (window.Personas && Personas.getCurrent) ? Personas.getCurrent() : { type: 'cat' };
         const speakingCat = (p.type === 'cat' && state === 'speaking');
         if (catAvatar) catAvatar.setAttribute('data-avatar-state', speakingCat ? 'speaking' : (state === 'listening' && p.type === 'cat' ? 'listening' : 'idle'));
         if (personaPhotoWrap && p.type === 'image') {
@@ -1000,7 +901,7 @@
 
     function setMouthOpen(level) {
         const clamped = Math.max(0, Math.min(1, level || 0));
-        const p = PERSONAS[currentPersonaId] || PERSONAS.billu;
+        const p = (window.Personas && Personas.getCurrent) ? Personas.getCurrent() : { type: 'cat' };
         if (p.type === 'cat') {
             if (catMouth) {
                 const sy = 0.18 + clamped * 3.2;

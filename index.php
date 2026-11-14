@@ -27,6 +27,7 @@ if ($action === 'chat') {
 </head>
 <body>
 <?php require __DIR__ . '/views/demo.php'; ?>
+<script src="assets/js/personas.js"></script>
 <script src="assets/js/app.js"></script>
 </body>
 </html>
