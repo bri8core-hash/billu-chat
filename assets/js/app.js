@@ -1,4 +1,4 @@
-    const statusEl = document.getElementById('status');
+﻿    const statusEl = document.getElementById('status');
     const contextEl = document.getElementById('context');
     const conversationEl = document.getElementById('conversation');
     const debugEl = document.getElementById('debug');
@@ -218,7 +218,7 @@
         recordBtn.disabled = v;
         sendTextBtn.disabled = v;
         clearBtn.disabled = v && !!mediaRecorder;
-        turnInfo.textContent = v ? 'Processing…' : '';
+        turnInfo.textContent = v ? 'Processingâ€¦' : '';
         if (!v) updateRecordButton();
     }
 
@@ -419,7 +419,7 @@
             updateRecordButton();
             testMicBtn.disabled = true;
             if (stopConversationBtn) { stopConversationBtn.style.display = ''; stopConversationBtn.disabled = false; }
-            setStatus('Recording… speak now; silence auto-sends each sentence. Click ■ Stop to end recording.');
+            setStatus('Recordingâ€¦ speak now; silence auto-sends each sentence. Click â–  Stop to end recording.');
             log('recording started' + (mime ? ' (' + mime + ')' : '') + ', device=' + (micSelect.options[micSelect.selectedIndex] ? micSelect.options[micSelect.selectedIndex].text : micSelect.value));
         } catch (e) {
             log('mic error: ' + e.name + ': ' + e.message);
@@ -435,7 +435,7 @@
 
     function stopRecording() {
         if (mediaRecorder && mediaRecorder.state !== 'inactive') {
-            setStatus('Processing recorded audio…');
+            setStatus('Processing recorded audioâ€¦');
             setBusy(true);
             mediaRecorder.stop();
         }
@@ -548,7 +548,7 @@
     async function handleAudioBlob(blob, mimeType) {
         try {
             setBusy(true);
-            setStatus('Preparing audio for Gnani STT…');
+            setStatus('Preparing audio for Gnani STTâ€¦');
             let uploadBlob = blob;
             let uploadName = 'speech.webm';
             try {
@@ -559,7 +559,7 @@
                 const ext = (mimeType && mimeType.indexOf('ogg') !== -1) ? 'ogg' : ((mimeType && mimeType.indexOf('mp4') !== -1) ? 'm4a' : ((mimeType && mimeType.indexOf('wav') !== -1) ? 'wav' : 'webm'));
                 uploadName = 'speech.' + ext;
             }
-            setStatus('Transcribing with Gnani…');
+            setStatus('Transcribing with Gnaniâ€¦');
             const fd = new FormData();
             fd.append('audio_file', uploadBlob, uploadName);
             fd.append('language_code', sttLanguageEl.value || 'indic-auto');
@@ -598,9 +598,15 @@
         }
     }
 
-    async function runChatAndSpeak(userText) {
+    async function runChatAndSpeak(userText, opts) {
+        const options = opts || {};
+        const showUser = options.showUser !== false;
+        const includeUser = options.includeUser !== false;
+        const silent = !!options.silentStatus;
+        const alreadyBusy = busy;
+        if (!alreadyBusy) setBusy(true);
         try {
-            setStatus('Getting AI response…');
+            if (!silent) setStatus('Getting AI response…');
             const payload = {
                 message: userText,
                 context: contextEl.value || '',
@@ -618,26 +624,32 @@
             log('CHAT: ' + chatTextRaw.slice(0, 500));
             if (!chatRes.ok || chatJson.success === false) {
                 const errMsg = chatJson && (chatJson.error || chatJson.message) || ('HTTP ' + chatRes.status);
-                setStatus('Chat error: ' + errMsg);
+                if (!silent) setStatus('Chat error: ' + errMsg);
+                else log('auto chat error: ' + errMsg);
                 setBusy(false);
-                return;
+                return false;
             }
             const reply = (chatJson.response || '').toString().trim();
             if (!reply) {
                 log('Chat returned empty response. raw=' + chatTextRaw.slice(0, 300));
-                appendConversation('assistant', '[No response from AI]');
-                setStatus('AI returned an empty response (check chat backend/context).');
+                if (!silent) {
+                    appendConversation('assistant', '[No response from AI]');
+                    setStatus('AI returned an empty response (check chat backend/context).');
+                }
                 setBusy(false);
-                return;
+                return false;
             }
-            history.push({ role: 'user', content: userText });
+            if (showUser) appendConversation('user', userText);
+            if (includeUser) history.push({ role: 'user', content: userText });
             history.push({ role: 'assistant', content: reply });
             appendConversation('assistant', reply);
             await speakText(reply);
+            return true;
         } catch (e) {
             log('chat error: ' + e.message);
-            setStatus('Chat error: ' + e.message);
+            if (!silent) setStatus('Chat error: ' + e.message);
             setBusy(false);
+            return false;
         }
     }
 
@@ -649,7 +661,7 @@
                 setBusy(false);
                 return;
             }
-            setStatus('Generating speech with Gnani TTSâ€¦');
+            setStatus('Generating speech with Gnani TTSÃ¢â‚¬Â¦');
             const model = ttsModelEl.value || 'timbre-v2.5';
             const voices = TTS_VOICES[model] || [];
             let voice = ttsVoiceEl.value || (voices[0] ? voices[0].value : 'Kaveri');
@@ -688,23 +700,23 @@
             ttsAudioUrl = URL.createObjectURL(blob);
             player.src = ttsAudioUrl;
             if (replayBtn) { replayBtn.style.display = ''; replayBtn.disabled = false; }
-            setStatus('Speaking… (click ▶ for next reply when ready)');
+            setStatus('Speakingâ€¦ (click â–¶ for next reply when ready)');
             setBusy(true);
             recordBtn.disabled = true;
             if (replayBtn) replayBtn.disabled = true;
             player.onended = () => {
-                setStatus('Ready. Click ▶ to start speaking, click ■ to stop and send, or ↻ to replay.');
+                setStatus('Ready. Click â–¶ to start speaking, click â–  to stop and send, or â†» to replay.');
                 if (replayBtn) replayBtn.disabled = false;
                 setBusy(false);
             };
             player.onerror = () => {
-                setStatus('Audio playback failed. You can read the response above or click ↻ to retry.');
+                setStatus('Audio playback failed. You can read the response above or click â†» to retry.');
                 if (replayBtn) replayBtn.disabled = false;
                 setBusy(false);
             };
             await player.play().catch((e) => {
                 log('playback blocked: ' + e.message);
-                setStatus('Playback blocked by browser; click ↻ to play the response.');
+                setStatus('Playback blocked by browser; click â†» to play the response.');
                 if (replayBtn) replayBtn.disabled = false;
                 setBusy(false);
             });
@@ -737,7 +749,7 @@
         if (testAmpHandle) { closeAmplifiedStream(testAmpHandle); testAmpHandle = null; }
         stopMicLevelMonitor();
         testMicBtn.disabled = false; stopTestBtn.disabled = true;
-        setStatus(mediaRecorder ? 'Recording…' : 'Ready.');
+        setStatus(mediaRecorder ? 'Recordingâ€¦' : 'Ready.');
     }
 
     async function startRecordReplay() {
@@ -747,7 +759,7 @@
         recTestBlob = null; recTestMime = '';
         recStartBtn.disabled = true; recStopBtn.disabled = false; recTranscribeBtn.disabled = true;
         recPlaybackWrap.style.display = 'none'; recResultMsg.textContent = ''; recTranscript.value = ''; recCountdown.textContent = '5s';
-        setStatus('Recording 5 seconds - speak now…');
+        setStatus('Recording 5 seconds - speak nowâ€¦');
         try {
             await populateMicDevices(true);
             const raw = await navigator.mediaDevices.getUserMedia(getMicConstraints());
@@ -795,8 +807,8 @@
     async function transcribeRecordReplay() {
         if (!recTestBlob || recTestBlob.size === 0) { setStatus('No diagnostic clip to transcribe. Record 5s first.'); return; }
         recTranscribeBtn.disabled = true; recStartBtn.disabled = true;
-        recResultMsg.textContent = 'Preparing clip for STT…'; recTranscript.value = '';
-        setStatus('Transcribing diagnostic clip with Gnani…');
+        recResultMsg.textContent = 'Preparing clip for STTâ€¦'; recTranscript.value = '';
+        setStatus('Transcribing diagnostic clip with Gnaniâ€¦');
         try {
             let uploadBlob = recTestBlob;
             let uploadName = 'diagnostic.webm';
@@ -809,7 +821,7 @@
                 const ext = (mimeType && mimeType.indexOf('ogg') !== -1) ? 'ogg' : ((mimeType && mimeType.indexOf('mp4') !== -1) ? 'm4a' : ((mimeType && mimeType.indexOf('wav') !== -1) ? 'wav' : 'webm'));
                 uploadName = 'diagnostic.' + ext;
             }
-            recResultMsg.textContent = 'Transcribing clip with Gnani…';
+            recResultMsg.textContent = 'Transcribing clip with Gnaniâ€¦';
             const fd = new FormData();
             fd.append('audio_file', uploadBlob, uploadName);
             fd.append('language_code', sttLanguageEl.value || 'indic-auto');
@@ -939,7 +951,7 @@
             personaPhotoWrap.classList.remove('speaking');
         }
         if (avatarStateLabel) {
-            const labels = { idle: 'Idle', listening: 'Listening…', thinking: 'Thinking…', speaking: 'Speaking…' };
+            const labels = { idle: 'Idle', listening: 'Listeningâ€¦', thinking: 'Thinkingâ€¦', speaking: 'Speakingâ€¦' };
             avatarStateLabel.textContent = labels[state] || 'Idle';
         }
     }
