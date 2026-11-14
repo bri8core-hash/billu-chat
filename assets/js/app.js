@@ -97,6 +97,7 @@
         if (player) { player.pause(); player.removeAttribute('src'); }
         if (ttsAudioUrl) { URL.revokeObjectURL(ttsAudioUrl); ttsAudioUrl = null; }
         if (replayBtn) { replayBtn.style.display = 'none'; replayBtn.disabled = false; }
+        resetIdleNudge('clear');
     }
     const micSelect = document.getElementById('micSelect');
     const testMicBtn = document.getElementById('testMicBtn');
@@ -146,6 +147,49 @@
     let recTestMime = '';
     let recTestUrl = null;
     let recTestTimer = null;
+    let idleNudgeTimer = null;
+    let conversationToken = 0;
+
+    function cancelAutoConversation() {
+        conversationToken++;
+    }
+
+    const IDLE_NUDGE_MS = 25000;
+
+    function scheduleIdleNudge(reason) {
+        if (idleNudgeTimer) clearTimeout(idleNudgeTimer);
+        idleNudgeTimer = setTimeout(() => triggerIdleNudge(reason || 'idle'), IDLE_NUDGE_MS);
+    }
+
+    function resetIdleNudge(reason) {
+        scheduleIdleNudge(reason || 'activity');
+    }
+
+    async function startPersonaIntroduction() {
+        const token = ++conversationToken;
+        if (busy) return;
+        const p = (window.Personas && Personas.getCurrent) ? Personas.getCurrent() : { name: 'Persona' };
+        log('starting intro for ' + p.name);
+        const ok = await runChatAndSpeak('Give a short, friendly random introduction of yourself to start the conversation. Keep it to 1-2 sentences and invite the user to chat.', { showUser: false, includeUser: false });
+        if (token !== conversationToken) return;
+        if (ok) resetIdleNudge('after-intro');
+        else scheduleIdleNudge('retry-intro');
+    }
+
+    async function triggerIdleNudge(reason) {
+        const token = conversationToken;
+        if (token !== conversationToken) return;
+        if (busy || (mediaRecorder && mediaRecorder.state !== 'inactive') || (player && !player.paused && !player.ended)) {
+            scheduleIdleNudge('busy');
+            return;
+        }
+        const p = (window.Personas && Personas.getCurrent) ? Personas.getCurrent() : { name: 'Persona' };
+        log('idle nudge (' + (reason || 'timer') + ') for ' + p.name);
+        const ok = await runChatAndSpeak('The user has been quiet for a while. Start a short, friendly random conversation starter or ask a light question relevant to who you are. Keep it to 1-2 sentences.', { showUser: false, includeUser: false, silentStatus: true });
+        if (token !== conversationToken) return;
+        if (ok) resetIdleNudge('after-nudge');
+        else scheduleIdleNudge('retry-nudge');
+    }
 
     function setStatus(msg) { statusEl.textContent = msg; }
     function log(msg) {
@@ -163,11 +207,11 @@
     function updateRecordButton() {
         if (!recordBtn) return;
         const recording = !!mediaRecorder;
-        recordBtn.textContent = recording ? '■ Stop' : '▶ Record';
+        recordBtn.textContent = recording ? 'Stop' : 'Talk';
         recordBtn.classList.toggle('green', !recording);
         recordBtn.classList.toggle('red', recording);
-        recordBtn.setAttribute('aria-label', recording ? 'Stop recording and send' : 'Start recording');
-        recordBtn.title = recording ? 'Stop recording and send to AI' : 'Start recording with microphone';
+        recordBtn.setAttribute('aria-label', recording ? 'Stop recording and send' : 'Talk');
+        recordBtn.title = recording ? 'Stop recording and send to AI' : 'Talk to the persona';
     }
     function setBusy(v) {
         busy = v;
@@ -545,7 +589,7 @@
             if (chatTranscript !== transcript) {
                 log('STT English for chat: ' + chatTranscript.slice(0, 200));
             }
-            await runChatAndSpeak(chatTranscript);
+            await runChatAndSpeak(chatTranscript, { showUser: false });
         } catch (e) {
             log('STT flow error: ' + e.message);
             setStatus('Error: ' + e.message);
@@ -850,7 +894,8 @@
         manualText.value = '';
         appendConversation('user', t);
         setBusy(true);
-        await runChatAndSpeak(t);
+        resetIdleNudge('user-text');
+        await runChatAndSpeak(t, { showUser: false });
         if (player.paused) setBusy(false);
     });
     if (samplePrompts) {
@@ -1025,11 +1070,11 @@
     function resumeAvatarAudio() { if (avatarAudioCtx && avatarAudioCtx.state === 'suspended') avatarAudioCtx.resume().catch(() => {}); }
 
     if (player) {
-        player.addEventListener('play', () => { resumeAvatarAudio(); setAvatarState('speaking'); startMouthLoop(); });
-        player.addEventListener('playing', () => { resumeAvatarAudio(); setAvatarState('speaking'); startMouthLoop(); });
-        player.addEventListener('pause', () => { if (player.ended) return; stopMouthLoop(); if (avatarState === 'speaking') setAvatarState('idle'); });
-        player.addEventListener('ended', () => { stopMouthLoop(); setAvatarState('idle'); });
-        player.addEventListener('error', () => { stopMouthLoop(); setAvatarState('idle'); });
+        player.addEventListener('play', () => { resumeAvatarAudio(); setAvatarState('speaking'); startMouthLoop(); resetIdleNudge('play'); });
+        player.addEventListener('playing', () => { resumeAvatarAudio(); setAvatarState('speaking'); startMouthLoop(); resetIdleNudge('playing'); });
+        player.addEventListener('pause', () => { if (player.ended) return; stopMouthLoop(); if (avatarState === 'speaking') setAvatarState('idle'); resetIdleNudge('pause'); });
+        player.addEventListener('ended', () => { stopMouthLoop(); setAvatarState('idle'); resetIdleNudge('ended'); });
+        player.addEventListener('error', () => { stopMouthLoop(); setAvatarState('idle'); resetIdleNudge('error'); });
         player.addEventListener('emptied', () => { stopMouthLoop(); if (!busy) setAvatarState('idle'); });
     }
 
@@ -1060,10 +1105,25 @@
     if (samplePrompts) samplePrompts.addEventListener('change', () => { resumeAvatarAudio(); }, { capture: true });
 
     if (personaSelect) {
-        personaSelect.addEventListener('change', () => applyPersona(personaSelect.value, true));
+        personaSelect.addEventListener('change', () => {
+            cancelAutoConversation();
+            stopConversation();
+            applyPersona(personaSelect.value, true);
+            startPersonaIntroduction();
+        });
     }
 
-    window.addEventListener('beforeunload', () => { cleanupStream(); if (testAmpHandle) closeAmplifiedStream(testAmpHandle); if (recAmpHandle) closeAmplifiedStream(recAmpHandle); stopMouthLoop(); if (avatarBlinkTimer) clearTimeout(avatarBlinkTimer); if (avatarPupilTimer) clearTimeout(avatarPupilTimer); if (avatarAudioCtx) { avatarAudioCtx.close().catch(()=>{}); } });
+    window.addEventListener('beforeunload', () => { if (idleNudgeTimer) clearTimeout(idleNudgeTimer); cleanupStream(); if (testAmpHandle) closeAmplifiedStream(testAmpHandle); if (recAmpHandle) closeAmplifiedStream(recAmpHandle); stopMouthLoop(); if (avatarBlinkTimer) clearTimeout(avatarBlinkTimer); if (avatarPupilTimer) clearTimeout(avatarPupilTimer); if (avatarAudioCtx) { avatarAudioCtx.close().catch(()=>{}); } });
+    const settingsToggle = document.getElementById('settingsToggle');
+    if (settingsToggle) {
+        document.body.classList.add('panels-hidden');
+        settingsToggle.addEventListener('click', () => {
+            const hidden = document.body.classList.toggle('panels-hidden');
+            settingsToggle.setAttribute('aria-expanded', String(!hidden));
+            settingsToggle.title = hidden ? 'Show panels' : 'Hide panels';
+        });
+        settingsToggle.setAttribute('aria-expanded', 'false');
+    }
     syncTtsVoices('Kaveri');
     if (personaSelect) personaSelect.value = 'billu';
     applyPersona('billu', false);
@@ -1072,3 +1132,5 @@
     updateRecordButton();
     setAvatarState('idle');
     log('demo ready (persona support enabled)');
+    resetIdleNudge('init');
+    startPersonaIntroduction();

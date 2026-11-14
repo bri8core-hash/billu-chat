@@ -1,10 +1,13 @@
-<div class="page">
-    <h1 id="appTitle">Persona Chat</h1>
+﻿<div class="page">
+    <div class="page-header">
+        <h1 id="appTitle">Persona Chat</h1>
+        <button id="settingsToggle" class="gear-btn" aria-label="Settings" title="Show/hide panels">&#9881;</button>
+    </div>
     <div id="status" class="status"></div>
 
     <div class="grid">
 
-        <div class="card avatar-card">
+        <div class="card avatar-card span2">
             <div class="persona-selector-row">
                 <label for="personaSelect">Persona</label>
                 <select id="personaSelect">
@@ -25,10 +28,14 @@
                             <clipPath id="eyeClipRight"><ellipse cx="125" cy="85" rx="14" ry="16"/></clipPath>
                         </defs>
                         <g id="cat-head">
-                            <polygon id="cat-left-ear" points="45,55 70,10 95,55" fill="#f59e0b" stroke="#b45309" stroke-width="3" stroke-linejoin="round"/>
-                            <polygon points="55,50 70,22 85,50" fill="#fbcfe8"/>
-                            <polygon id="cat-right-ear" points="105,55 130,10 155,55" fill="#f59e0b" stroke="#b45309" stroke-width="3" stroke-linejoin="round"/>
-                            <polygon points="115,50 130,22 145,50" fill="#fbcfe8"/>
+                            <g id="cat-left-ear-group">
+                                <path id="cat-left-ear" d="M 43,60 C 38,36 46,10 72,14 C 92,17 97,40 97,60 Z" fill="#f59e0b" stroke="#b45309" stroke-width="3" stroke-linejoin="round"/>
+                                <path d="M 51,56 C 48,38 54,22 72,26 C 86,29 90,42 90,56 Z" fill="#fbcfe8"/>
+                            </g>
+                            <g id="cat-right-ear-group">
+                                <path id="cat-right-ear" d="M 157,60 C 162,36 154,10 128,14 C 108,17 103,40 103,60 Z" fill="#f59e0b" stroke="#b45309" stroke-width="3" stroke-linejoin="round"/>
+                                <path d="M 149,56 C 152,38 146,22 128,26 C 114,29 110,42 110,56 Z" fill="#fbcfe8"/>
+                            </g>
                             <ellipse cx="100" cy="95" rx="70" ry="62" fill="#fbbf24" stroke="#b45309" stroke-width="3"/>
                             <ellipse cx="100" cy="108" rx="40" ry="28" fill="#fde68a" opacity="0.7"/>
                             <g id="cat-left-eye">
@@ -60,16 +67,18 @@
                 </div>
                 <div id="avatarStateLabel" class="cat-state">Idle</div>
                 <div id="personaDesc" class="persona-desc small"></div>
+                <div class="row" style="margin-top:10px; justify-content:center;">
+                    <button id="recordBtn" class="green" aria-label="Talk" title="Talk">Talk</button>
+                    <button id="replayBtn" class="gray" aria-label="Replay last response" title="Replay last response" style="display:none;">&#x21BB;</button>
+                </div>
             </div>
         </div>
 
-        <div class="card">
-            <label for="conversation">Conversation</label>
+        <details class="card span2 extra-panel">
+            <summary>Conversation</summary>
             <textarea id="conversation" readonly placeholder="Conversation will appear here..."></textarea>
             <div class="row" style="margin-top:10px;">
-                <button id="recordBtn" class="green" aria-label="Start recording" title="Start recording with microphone">▶ Record</button>
                 <button id="stopConversationBtn" class="red stop-conversation" aria-label="Stop conversation" title="Stop conversation immediately (during recording or AI speech)" style="display:none;">⏹ Stop</button>
-                <button id="replayBtn" class="gray" aria-label="Replay last response" title="Replay last response" style="display:none;">&#128257;</button>
                 <button id="clearBtn" class="gray" aria-label="Clear conversation" title="Clear conversation">&#128465;</button>
                 <span class="small" id="turnInfo"></span>
             </div>
@@ -80,11 +89,10 @@
                 <span id="micLevelText" class="meter-db">-60 dB</span>
                 <span id="micPeakText" class="meter-peak">peak: -60 dB</span>
             </div>
-        </div>
+        </details>
 
-
-        <div class="card span2">
-            <label for="manualText">Text fallback (type and send without mic)</label>
+        <details class="card span2 extra-panel">
+            <summary>Text fallback (type and send without mic)</summary>
             <div class="row">
                 <select id="samplePrompts" style="max-width:100%; flex:1 1 220px;">
                     <option value="">Sample question prompts…</option>
@@ -101,10 +109,9 @@
                 <input id="manualText" type="text" placeholder="Type a message..." />
                 <button id="sendTextBtn">Send Text</button>
             </div>
-        </div>
+        </details>
 
-
-        <details class="card span2">
+        <details class="card span2 extra-panel">
             <summary>AI context / system prompt</summary>
             <textarea id="context">You are Billu, a friendly cat teacher for a 1st standard kid. Explain clearly, kindly, and in very simple words. Keep answers short and age-appropriate.</textarea>
             <div class="row" style="margin-top:10px;">
@@ -160,12 +167,12 @@
             </div>
             <p class="small">Tip: use a TTS voice compatible with the selected TTS model. For auto-detected STT, pick a TTS language/voice you want the reply spoken in.</p>
         </details>
-        <details class="card span2">
+        <details class="card span2 extra-panel">
             <summary>Debug log</summary>
             <textarea id="debug" readonly></textarea>
         </details>
 
-        <details class="card span2">
+        <details class="card span2 extra-panel">
             <summary>Mic Diagnostics</summary>
             <div class="row" style="margin-bottom:8px;">
                 <div class="inline-field" style="min-width:0; flex:1 1 220px;">
