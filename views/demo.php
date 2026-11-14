@@ -61,13 +61,6 @@
                 <span id="micLevelText" class="meter-db">-60 dB</span>
                 <span id="micPeakText" class="meter-peak">peak: -60 dB</span>
             </div>
-            <div class="row" style="margin-top:8px;">
-                <div class="inline-field" style="max-width:100%; flex:1 1 220px;">
-                    <label for="recGainSlider">Input boost: <span id="recGainValue" class="boost-val">8x</span></label>
-                    <input type="range" id="recGainSlider" min="1" max="10" step="0.5" value="8">
-                </div>
-            </div>
-            <span id="recResultMsg" class="small" style="display:block; margin-top:4px;"></span>
         </div>
 
 
@@ -168,6 +161,13 @@
                 <button id="recTranscribeBtn" disabled>Transcribe Clip</button>
                 <button id="recClearBtn" class="gray">Clear Clip</button>
                 <span id="recCountdown" class="small"></span>
+            </div>
+            <div class="row">
+                <div class="inline-field" style="max-width:100%; flex:1 1 220px;">
+                    <label for="recGainSlider">Input boost: <span id="recGainValue" class="boost-val">8x</span></label>
+                    <input type="range" id="recGainSlider" min="1" max="10" step="0.5" value="8">
+                </div>
+                <span id="recResultMsg" class="small"></span>
             </div>
             <div id="recPlaybackWrap" style="display:none; margin-top:8px;">
                 <audio id="recAudio" controls></audio>
