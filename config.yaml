@@ -1,0 +1,4 @@
+gnani_api_key: "vach_1ytE2CY5X2EB7QFkF98yt0gX7XmaRN8Qpw7h7A0iPEzzti9YlRNl7UlSJuTqNpZBpi7DNWUK4Yi63TCh4P1ZIUQFYF9p8Fgy_b8d2b3360ba14e1cad95bac10caad26c"
+stt_url: "https://api.vachana.ai/stt/v3"
+tts_url: "https://api.vachana.ai/api/v1/tts/inference"
+chat_url: "https://d1q4vj97qsit9g.cloudfront.net/api/chat-completion-with-history"

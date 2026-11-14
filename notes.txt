@@ -1,0 +1,13 @@
+Gnani.ai API key: (moved to config.yaml)
+
+http://localhost/yack/gnani-ai-tts/index.php
+
+Prompts
+1. refer the code under reference folder especially index.php
+2. create index.php file and integrate with gnani ai api key to use text to speech and speech to text.
+3. The goal is to make speech based conversation with AI. The converted text using Gnani AI will be sent to AI used in reference/index.php and retreive the response and speak it out. We can set the context for AI prompt like in reference/index.php in a text area like you are a teacher for 1st standard kid.
+4. The user replys using mic voice which is again converted to text and sent to AI same as 3.
+
+Completed-prompts
+
+
