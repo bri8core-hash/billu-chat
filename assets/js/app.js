@@ -42,7 +42,7 @@
             mouth: { top: '60%', left: '50%', width: '10%', height: '4%' },
             description: 'Caring, practical, and supportive father figure.',
             context: 'You are Sandeep, a caring and practical father. Speak warmly, encourage confidence, give clear guidance, and keep answers supportive and easy to understand. Offer sensible advice and reassurance when helpful.',
-            tts: { model: 'timbre-v3.0', voice: 'Prakash', language: 'en-IN', speed: 0.95 }
+            tts: { model: 'timbre-v3.0', voice: 'Prakash', language: 'hi-IN', speed: 0.95 }
         },
         mother: {
             name: 'Mother (Leelavati)',
@@ -57,22 +57,35 @@
             name: 'Teacher',
             type: 'image',
             description: 'Patient teacher who explains concepts step by step.',
-            context: 'You are a patient and encouraging teacher. Explain concepts step by step in simple language, check understanding, give examples, and keep responses clear and structured.',
-            tts: { model: 'timbre-v2.5', voice: 'Nalini', language: 'en-IN', speed: 0.9 }
+            context: 'You are a patient and encouraging indian teacher. Explain concepts step by step in simple language, check understanding, give examples, and keep responses clear and structured.',
+            tts: { model: 'timbre-v2.5', voice: 'Nalini', language: 'hi-IN', speed: 0.9 }
         },
         scientist: {
             name: 'Scientist',
             type: 'image',
+            image: 'assets/images/scientist.png',
+            mouth: { top: '34.3%', left: '68%', width: '9%', height: '2%' },
             description: 'Curious scientist who explains how things work.',
-            context: 'You are a curious and friendly scientist. Explain how and why things work using simple reasoning, observations, and examples. Encourage curiosity and keep explanations accurate but easy to understand.',
-            tts: { model: 'timbre-v3.0', voice: 'Shubham', language: 'en-IN', speed: 0.95 }
+            context: 'You are a curious and friendly female indian scientist. Explain how and why things work using simple reasoning, observations, and examples. Encourage curiosity and keep explanations accurate but easy to understand.',
+            tts: { model: 'timbre-v3.0', voice: 'Nalini', language: 'en-IN', speed: 0.95 }
         },
         engineer: {
             name: 'Engineer',
             type: 'image',
+            image: 'assets/images/enineer.png',
+            mouth: { top: '36%', left: '45%', width: '7%', height: '2%' },
             description: 'Practical engineer focused on building and solving problems.',
-            context: 'You are a practical and clear-thinking engineer. Focus on how to build, fix, and solve problems step by step. Give structured, actionable explanations and keep them easy to follow.',
-            tts: { model: 'timbre-v3.0', voice: 'Avinash', language: 'en-IN', speed: 1.0 }
+            context: 'You are a practical and clear-thinking female indian engineer. Focus on how to build, fix, and solve problems step by step. Give structured, actionable explanations and keep them easy to follow.',
+            tts: { model: 'timbre-v3.0', voice: 'Chetana', language: 'en-IN', speed: 1.0 }
+        },
+        doctor: {
+            name: 'Doctor',
+            type: 'image',
+            image: 'assets/images/doctor.png',
+            mouth: { top: '35.2%', left: '49%', width: '9%', height: '2%' },
+            description: 'Caring doctor who explains health clearly and calmly.',
+            context: 'You are a caring and knowledgeable female doctor. Explain health, wellness, and medical topics clearly, calmly, and simply. Be reassuring, encourage healthy habits, and remind users to consult a qualified healthcare professional for diagnosis, treatment, or urgent concerns.',
+            tts: { model: 'timbre-v3.0', voice: 'Chetana', language: 'en-IN', speed: 0.95 }
         }
     };
 
@@ -943,7 +956,8 @@
         samplePrompts.addEventListener('change', () => {
             if (samplePrompts.value) {
                 manualText.value = samplePrompts.value;
-                manualText.focus();
+                sendTextBtn.click();
+                samplePrompts.value = '';
             }
         });
     }

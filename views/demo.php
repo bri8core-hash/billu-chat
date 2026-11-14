@@ -14,6 +14,7 @@
                     <option value="teacher">Teacher</option>
                     <option value="scientist">Scientist</option>
                     <option value="engineer">Engineer</option>
+                    <option value="doctor">Doctor</option>
                 </select>
             </div>
             <div class="avatar-wrap">
