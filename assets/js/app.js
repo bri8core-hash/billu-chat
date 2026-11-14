@@ -16,6 +16,8 @@
     const ttsModelEl = document.getElementById('ttsModel');
     const ttsVoiceEl = document.getElementById('ttsVoice');
     const ttsLanguageEl = document.getElementById('ttsLanguage');
+    const ttsSpeedEl = document.getElementById('ttsSpeed');
+    const ttsSpeedValueEl = document.getElementById('ttsSpeedValue');
 
     const TTS_VOICES = {
         'timbre-v2.5': [
@@ -92,12 +94,15 @@
     let history = [];
     let busy = false;
     let userLanguage = 'en-IN';
+    let autoRestartRecorder = false;
     let speechDetected = false;
     let silenceStartTime = null;
-    const SILENCE_THRESHOLD_DB = -40;
+    const SILENCE_THRESHOLD_DB = -45;
+    const SPEECH_THRESHOLD_DB = -35;
     const SILENCE_DURATION_MS = 1500;
+    const MAX_SENTENCE_DURATION_MS = 10000;
+    let sentenceStartTime = null;
 
-    let micLevelTimer = null;
     let micLevelContext = null;
     let micLevelRaf = null;
     let micMeterAnalyser = null;
@@ -184,8 +189,6 @@
     function startMicMeterLoop() {
         cancelAnimationFrame(micLevelRaf);
         const samples = new Float32Array(micMeterAnalyser.fftSize);
-        let lastLoggedDb = 0;
-        let logCounter = 0;
         function tick() {
             if (!micMeterAnalyser) return;
             micMeterAnalyser.getFloatTimeDomainData(samples);
@@ -206,21 +209,29 @@
             micPeakText.textContent = 'peak: ' + peakDb.toFixed(1) + ' dB';
 
             if (mediaRecorder && mediaRecorder.state === 'recording') {
-                logCounter++;
-                if (logCounter % 30 === 0) {
-                    log('mic level: ' + db.toFixed(1) + ' dB, speechDetected=' + speechDetected + ', silenceStartTime=' + silenceStartTime);
-                }
-                if (db > SILENCE_THRESHOLD_DB) {
+                if (db > SPEECH_THRESHOLD_DB) {
                     if (!speechDetected) log('speech detected, db=' + db.toFixed(1));
                     speechDetected = true;
                     silenceStartTime = null;
-                } else if (speechDetected && silenceStartTime === null) {
-                    silenceStartTime = Date.now();
-                    log('silence started, db=' + db.toFixed(1));
-                } else if (speechDetected && silenceStartTime !== null && Date.now() - silenceStartTime >= SILENCE_DURATION_MS) {
-                    log('silence duration reached, auto-sending sentence');
-                    silenceStartTime = null;
+                    if (sentenceStartTime === null) sentenceStartTime = Date.now();
+                } else if (speechDetected) {
+                    // Below speech threshold: treat as silence (no dead zone reset)
+                    if (silenceStartTime === null) {
+                        silenceStartTime = Date.now();
+                    } else if (Date.now() - silenceStartTime >= SILENCE_DURATION_MS) {
+                        log('silence duration reached, auto-sending sentence');
+                        silenceStartTime = null;
+                        speechDetected = false;
+                        sentenceStartTime = null;
+                        sendAccumulatedAudio();
+                    }
+                }
+                // Max sentence duration safety net
+                if (sentenceStartTime !== null && Date.now() - sentenceStartTime >= MAX_SENTENCE_DURATION_MS) {
+                    log('max sentence duration reached, auto-sending sentence');
+                    sentenceStartTime = null;
                     speechDetected = false;
+                    silenceStartTime = null;
                     sendAccumulatedAudio();
                 }
             }
@@ -241,17 +252,6 @@
             micMeterAnalyser = analyser;
             micLevelWrap.style.display = 'flex';
             startMicMeterLoop();
-            const samples = new Float32Array(analyser.fftSize);
-            micLevelTimer = setInterval(() => {
-                if (!micMeterAnalyser) return;
-                micMeterAnalyser.getFloatTimeDomainData(samples);
-                let sum = 0;
-                for (let i = 0; i < samples.length; i++) sum += samples[i] * samples[i];
-                const rms = Math.sqrt(sum / samples.length);
-                if (rms < 0.02) {
-                    log('mic level low/no sound: ' + rms.toFixed(4) + ' (check mic selection, permissions, Windows input level)');
-                }
-            }, 4000);
         } catch (e) {
             log('mic level monitor error: ' + e.message);
         }
@@ -260,7 +260,6 @@
     function stopMicLevelMonitor() {
         cancelAnimationFrame(micLevelRaf);
         micLevelRaf = null;
-        if (micLevelTimer) { clearInterval(micLevelTimer); micLevelTimer = null; }
         if (micLevelContext) { micLevelContext.close().catch(() => {}); micLevelContext = null; }
         micMeterAnalyser = null;
         micLevelWrap.style.display = 'none';
@@ -310,16 +309,33 @@
             mediaRecorder = new MediaRecorder(mediaStream, opts);
             mediaRecorder.ondataavailable = (e) => { if (e.data && e.data.size > 0) chunks.push(e.data); };
             mediaRecorder.onstop = async () => {
-                const blobType = mediaRecorder && mediaRecorder.mimeType ? mediaRecorder.mimeType : (mime || 'audio/webm');
-                cleanupStream();
-                mediaRecorder = null;
-                updateRecordButton();
-                testMicBtn.disabled = false;
+                const blobType = mediaRecorder.mimeType || 'audio/webm';
                 const remaining = new Blob(chunks, { type: blobType });
                 chunks = [];
+                updateRecordButton();
+                testMicBtn.disabled = false;
+                speechDetected = false;
+                silenceStartTime = null;
+                sentenceStartTime = null;
                 if (remaining.size > 0) {
-                    log('manual stop: processing remaining audio ' + (remaining.size / 1024).toFixed(1) + ' KB');
+                    log('processing recorded audio ' + (remaining.size / 1024).toFixed(1) + ' KB');
                     await handleAudioBlob(remaining, blobType);
+                }
+                if (autoRestartRecorder && mediaRecorder && mediaRecorder.state === 'inactive') {
+                    autoRestartRecorder = false;
+                    try {
+                        mediaRecorder.start(1000);
+                        log('recording auto-restarted after sentence processing');
+                    } catch (e) {
+                        log('recording auto-restart failed: ' + e.message);
+                        mediaRecorder = null;
+                        cleanupStream();
+                        updateRecordButton();
+                    }
+                } else {
+                    mediaRecorder = null;
+                    cleanupStream();
+                    updateRecordButton();
                 }
             };
             mediaRecorder.start(1000);
@@ -350,6 +366,7 @@
         }
         speechDetected = false;
         silenceStartTime = null;
+        sentenceStartTime = null;
         if (stopConversationBtn) { stopConversationBtn.style.display = 'none'; stopConversationBtn.disabled = true; }
     }
 
@@ -363,17 +380,9 @@
             log('sendAccumulatedAudio: not recording, skipping');
             return;
         }
-        const blobType = mediaRecorder.mimeType || 'audio/webm';
-        const blob = new Blob(chunks, { type: blobType });
-        chunks = [];
-        if (blob.size === 0) {
-            log('silence auto-send: empty audio, skipping');
-            return;
-        }
-        log('silence auto-send: ' + (blob.size / 1024).toFixed(1) + ' KB');
-        setBusy(true);
-        await handleAudioBlob(blob, blobType);
-        log('sendAccumulatedAudio: done');
+        log('silence auto-send: stopping recorder to process sentence');
+        autoRestartRecorder = true;
+        mediaRecorder.stop();
     }
 
     function stopConversation() {
@@ -579,7 +588,7 @@
                 model: model,
                 voice: voice,
                 language: userLanguage,
-                speed: 1.0
+                speed: parseFloat(ttsSpeedEl.value)
             };
             const res = await fetch('index.php?action=tts', {
                 method: 'POST',
@@ -788,6 +797,7 @@
         const v = (TTS_VOICES[model] || []).find(x => x.value === ttsVoiceEl.value);
         if (v && v.lang && ttsLanguageEl.querySelector('option[value="' + v.lang + '"]')) ttsLanguageEl.value = v.lang;
     });
+    ttsSpeedEl.addEventListener('input', () => { ttsSpeedValueEl.textContent = ttsSpeedEl.value + 'x'; });
     clearBtn.addEventListener('click', () => {
         if (mediaRecorder && mediaRecorder.state !== 'inactive') return;
         history = [];

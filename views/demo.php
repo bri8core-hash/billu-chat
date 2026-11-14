@@ -55,6 +55,19 @@
                 <span class="small" id="turnInfo"></span>
             </div>
             <audio id="player" style="display:none;"></audio>
+            <div id="micLevelWrap" class="level-meter" style="display:none; margin-top:14px;">
+                <span><strong>Microphone level:</strong></span>
+                <div class="meter-bar"><div id="micLevelFill" class="meter-fill"></div></div>
+                <span id="micLevelText" class="meter-db">-60 dB</span>
+                <span id="micPeakText" class="meter-peak">peak: -60 dB</span>
+            </div>
+            <div class="row" style="margin-top:8px;">
+                <div class="inline-field" style="max-width:100%; flex:1 1 220px;">
+                    <label for="recGainSlider">Input boost: <span id="recGainValue" class="boost-val">8x</span></label>
+                    <input type="range" id="recGainSlider" min="1" max="10" step="0.5" value="8">
+                </div>
+            </div>
+            <span id="recResultMsg" class="small" style="display:block; margin-top:4px;"></span>
         </div>
 
 
@@ -127,6 +140,11 @@
                         <option value="pa-IN">pa-IN</option>
                     </select>
                 </div>
+                <div class="inline-field">
+                    <label for="ttsSpeed">TTS speed</label>
+                    <input type="range" id="ttsSpeed" min="0.6" max="1.2" step="0.1" value="0.85">
+                    <span class="small" id="ttsSpeedValue">0.85x</span>
+                </div>
             </div>
             <p class="small">Tip: use a TTS voice compatible with the selected TTS model. For auto-detected STT, pick a TTS language/voice you want the reply spoken in.</p>
         </details>
@@ -150,19 +168,6 @@
                 <button id="recTranscribeBtn" disabled>Transcribe Clip</button>
                 <button id="recClearBtn" class="gray">Clear Clip</button>
                 <span id="recCountdown" class="small"></span>
-            </div>
-            <div class="row">
-                <div class="inline-field" style="max-width:100%; flex:1 1 220px;">
-                    <label for="recGainSlider">Input boost: <span id="recGainValue" class="boost-val">4x</span></label>
-                    <input type="range" id="recGainSlider" min="1" max="10" step="0.5" value="4">
-                </div>
-                <span id="recResultMsg" class="small"></span>
-            </div>
-            <div id="micLevelWrap" class="level-meter" style="display:none;">
-                <span><strong>Microphone level:</strong></span>
-                <div class="meter-bar"><div id="micLevelFill" class="meter-fill"></div></div>
-                <span id="micLevelText" class="meter-db">-60 dB</span>
-                <span id="micPeakText" class="meter-peak">peak: -60 dB</span>
             </div>
             <div id="recPlaybackWrap" style="display:none; margin-top:8px;">
                 <audio id="recAudio" controls></audio>
