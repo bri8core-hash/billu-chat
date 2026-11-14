@@ -95,7 +95,9 @@
     let speechDetected = false;
     let silenceStartTime = null;
     const SILENCE_THRESHOLD_DB = -40;
-    const SILENCE_DURATION_MS = 1500;
+    const SILENCE_DURATION_MS = 1000;
+    const MAX_SENTENCE_DURATION_MS = 12000;
+    let sentenceStartTime = null;
 
     let micLevelTimer = null;
     let micLevelContext = null;
@@ -208,12 +210,13 @@
             if (mediaRecorder && mediaRecorder.state === 'recording') {
                 logCounter++;
                 if (logCounter % 30 === 0) {
-                    log('mic level: ' + db.toFixed(1) + ' dB, speechDetected=' + speechDetected + ', silenceStartTime=' + silenceStartTime);
+                    log('mic level: ' + db.toFixed(1) + ' dB, speechDetected=' + speechDetected + ', silenceStartTime=' + silenceStartTime + ', sentenceStartTime=' + sentenceStartTime);
                 }
                 if (db > SILENCE_THRESHOLD_DB) {
                     if (!speechDetected) log('speech detected, db=' + db.toFixed(1));
                     speechDetected = true;
                     silenceStartTime = null;
+                    if (sentenceStartTime === null) sentenceStartTime = Date.now();
                 } else if (speechDetected && silenceStartTime === null) {
                     silenceStartTime = Date.now();
                     log('silence started, db=' + db.toFixed(1));
@@ -221,6 +224,13 @@
                     log('silence duration reached, auto-sending sentence');
                     silenceStartTime = null;
                     speechDetected = false;
+                    sentenceStartTime = null;
+                    sendAccumulatedAudio();
+                } else if (sentenceStartTime !== null && Date.now() - sentenceStartTime >= MAX_SENTENCE_DURATION_MS) {
+                    log('max sentence duration reached, auto-sending sentence');
+                    sentenceStartTime = null;
+                    speechDetected = false;
+                    silenceStartTime = null;
                     sendAccumulatedAudio();
                 }
             }
@@ -350,6 +360,7 @@
         }
         speechDetected = false;
         silenceStartTime = null;
+        sentenceStartTime = null;
         if (stopConversationBtn) { stopConversationBtn.style.display = 'none'; stopConversationBtn.disabled = true; }
     }
 
