@@ -22,7 +22,7 @@ if ($action === 'chat') {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Billu Chat</title>
+    <title>Persona Chat</title>
     <link rel="stylesheet" href="assets/css/demo.css">
 </head>
 <body>

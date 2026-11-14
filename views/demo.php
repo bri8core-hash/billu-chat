@@ -1,46 +1,64 @@
 <div class="page">
-    <h1>Billu Chat</h1>
+    <h1 id="appTitle">Persona Chat</h1>
     <div id="status" class="status"></div>
 
     <div class="grid">
 
         <div class="card avatar-card">
-            <div class="cat-wrap">
-                <svg id="catAvatar" class="cat-avatar" data-avatar-state="idle" viewBox="0 0 200 180" xmlns="http://www.w3.org/2000/svg" aria-label="Cat avatar">
-                    <defs>
-                        <clipPath id="eyeClipLeft"><ellipse cx="75" cy="85" rx="14" ry="16"/></clipPath>
-                        <clipPath id="eyeClipRight"><ellipse cx="125" cy="85" rx="14" ry="16"/></clipPath>
-                    </defs>
-                    <g id="cat-head">
-                        <polygon id="cat-left-ear" points="45,55 70,10 95,55" fill="#f59e0b" stroke="#b45309" stroke-width="3" stroke-linejoin="round"/>
-                        <polygon points="55,50 70,22 85,50" fill="#fbcfe8"/>
-                        <polygon id="cat-right-ear" points="105,55 130,10 155,55" fill="#f59e0b" stroke="#b45309" stroke-width="3" stroke-linejoin="round"/>
-                        <polygon points="115,50 130,22 145,50" fill="#fbcfe8"/>
-                        <ellipse cx="100" cy="95" rx="70" ry="62" fill="#fbbf24" stroke="#b45309" stroke-width="3"/>
-                        <ellipse cx="100" cy="108" rx="40" ry="28" fill="#fde68a" opacity="0.7"/>
-                        <g id="cat-left-eye">
-                            <ellipse cx="75" cy="85" rx="14" ry="16" fill="#fff" stroke="#78350f" stroke-width="2"/>
-                            <g id="cat-pupil-left" class="cat-pupil"><ellipse cx="75" cy="87" rx="6" ry="8" fill="#1f2937"/><circle cx="73" cy="84" r="2.2" fill="#fff"/></g>
-                            <ellipse id="cat-eyelid-left" class="cat-eyelid" cx="75" cy="85" rx="15" ry="17" fill="#fbbf24" clip-path="url(#eyeClipLeft)"/>
+            <div class="persona-selector-row">
+                <label for="personaSelect">Persona</label>
+                <select id="personaSelect">
+                    <option value="billu">Billu (Cat Teacher)</option>
+                    <option value="father">Father (Sandeep)</option>
+                    <option value="mother">Mother (Leelavati)</option>
+                    <option value="teacher">Teacher</option>
+                    <option value="scientist">Scientist</option>
+                    <option value="engineer">Engineer</option>
+                </select>
+            </div>
+            <div class="avatar-wrap">
+                <div id="catAvatarWrap" class="cat-wrap">
+                    <svg id="catAvatar" class="cat-avatar" data-avatar-state="idle" viewBox="0 0 200 180" xmlns="http://www.w3.org/2000/svg" aria-label="Cat avatar">
+                        <defs>
+                            <clipPath id="eyeClipLeft"><ellipse cx="75" cy="85" rx="14" ry="16"/></clipPath>
+                            <clipPath id="eyeClipRight"><ellipse cx="125" cy="85" rx="14" ry="16"/></clipPath>
+                        </defs>
+                        <g id="cat-head">
+                            <polygon id="cat-left-ear" points="45,55 70,10 95,55" fill="#f59e0b" stroke="#b45309" stroke-width="3" stroke-linejoin="round"/>
+                            <polygon points="55,50 70,22 85,50" fill="#fbcfe8"/>
+                            <polygon id="cat-right-ear" points="105,55 130,10 155,55" fill="#f59e0b" stroke="#b45309" stroke-width="3" stroke-linejoin="round"/>
+                            <polygon points="115,50 130,22 145,50" fill="#fbcfe8"/>
+                            <ellipse cx="100" cy="95" rx="70" ry="62" fill="#fbbf24" stroke="#b45309" stroke-width="3"/>
+                            <ellipse cx="100" cy="108" rx="40" ry="28" fill="#fde68a" opacity="0.7"/>
+                            <g id="cat-left-eye">
+                                <ellipse cx="75" cy="85" rx="14" ry="16" fill="#fff" stroke="#78350f" stroke-width="2"/>
+                                <g id="cat-pupil-left" class="cat-pupil"><ellipse cx="75" cy="87" rx="6" ry="8" fill="#1f2937"/><circle cx="73" cy="84" r="2.2" fill="#fff"/></g>
+                                <ellipse id="cat-eyelid-left" class="cat-eyelid" cx="75" cy="85" rx="15" ry="17" fill="#fbbf24" clip-path="url(#eyeClipLeft)"/>
+                            </g>
+                            <g id="cat-right-eye">
+                                <ellipse cx="125" cy="85" rx="14" ry="16" fill="#fff" stroke="#78350f" stroke-width="2"/>
+                                <g id="cat-pupil-right" class="cat-pupil"><ellipse cx="125" cy="87" rx="6" ry="8" fill="#1f2937"/><circle cx="123" cy="84" r="2.2" fill="#fff"/></g>
+                                <ellipse id="cat-eyelid-right" class="cat-eyelid" cx="125" cy="85" rx="15" ry="17" fill="#fbbf24" clip-path="url(#eyeClipRight)"/>
+                            </g>
+                            <polygon points="100,102 94,110 106,110" fill="#f472b6" stroke="#be185d" stroke-width="1.5" stroke-linejoin="round"/>
+                            <ellipse cx="58" cy="108" rx="9" ry="5" fill="#fda4af" opacity="0.55"/>
+                            <ellipse cx="142" cy="108" rx="9" ry="5" fill="#fda4af" opacity="0.55"/>
+                            <ellipse id="cat-mouth" cx="100" cy="120" rx="10" ry="2.5" fill="#7f1d1d" stroke="#78350f" stroke-width="1.5"/>
+                            <line x1="58" y1="108" x2="28" y2="103" stroke="#78350f" stroke-width="2" stroke-linecap="round"/>
+                            <line x1="58" y1="114" x2="28" y2="114" stroke="#78350f" stroke-width="2" stroke-linecap="round"/>
+                            <line x1="58" y1="120" x2="28" y2="125" stroke="#78350f" stroke-width="2" stroke-linecap="round"/>
+                            <line x1="142" y1="108" x2="172" y2="103" stroke="#78350f" stroke-width="2" stroke-linecap="round"/>
+                            <line x1="142" y1="114" x2="172" y2="114" stroke="#78350f" stroke-width="2" stroke-linecap="round"/>
+                            <line x1="142" y1="120" x2="172" y2="125" stroke="#78350f" stroke-width="2" stroke-linecap="round"/>
                         </g>
-                        <g id="cat-right-eye">
-                            <ellipse cx="125" cy="85" rx="14" ry="16" fill="#fff" stroke="#78350f" stroke-width="2"/>
-                            <g id="cat-pupil-right" class="cat-pupil"><ellipse cx="125" cy="87" rx="6" ry="8" fill="#1f2937"/><circle cx="123" cy="84" r="2.2" fill="#fff"/></g>
-                            <ellipse id="cat-eyelid-right" class="cat-eyelid" cx="125" cy="85" rx="15" ry="17" fill="#fbbf24" clip-path="url(#eyeClipRight)"/>
-                        </g>
-                        <polygon points="100,102 94,110 106,110" fill="#f472b6" stroke="#be185d" stroke-width="1.5" stroke-linejoin="round"/>
-                        <ellipse cx="58" cy="108" rx="9" ry="5" fill="#fda4af" opacity="0.55"/>
-                        <ellipse cx="142" cy="108" rx="9" ry="5" fill="#fda4af" opacity="0.55"/>
-                        <ellipse id="cat-mouth" cx="100" cy="120" rx="10" ry="2.5" fill="#7f1d1d" stroke="#78350f" stroke-width="1.5"/>
-                        <line x1="58" y1="108" x2="28" y2="103" stroke="#78350f" stroke-width="2" stroke-linecap="round"/>
-                        <line x1="58" y1="114" x2="28" y2="114" stroke="#78350f" stroke-width="2" stroke-linecap="round"/>
-                        <line x1="58" y1="120" x2="28" y2="125" stroke="#78350f" stroke-width="2" stroke-linecap="round"/>
-                        <line x1="142" y1="108" x2="172" y2="103" stroke="#78350f" stroke-width="2" stroke-linecap="round"/>
-                        <line x1="142" y1="114" x2="172" y2="114" stroke="#78350f" stroke-width="2" stroke-linecap="round"/>
-                        <line x1="142" y1="120" x2="172" y2="125" stroke="#78350f" stroke-width="2" stroke-linecap="round"/>
-                    </g>
-                </svg>
-                <div id="catStateLabel" class="cat-state">Idle</div>
+                    </svg>
+                </div>
+                <div id="personaPhotoWrap" class="persona-photo-wrap" style="display:none;">
+                    <img id="personaImage" class="persona-image" alt="" />
+                    <div id="photoMouth" class="photo-mouth" aria-hidden="true"></div>
+                </div>
+                <div id="avatarStateLabel" class="cat-state">Idle</div>
+                <div id="personaDesc" class="persona-desc small"></div>
             </div>
         </div>
 
@@ -87,7 +105,7 @@
 
         <details class="card span2">
             <summary>AI context / system prompt</summary>
-            <textarea id="context">You are a teacher for 1st standard kid. Explain clearly, kindly, and in very simple words. Keep answers short and age-appropriate.</textarea>
+            <textarea id="context">You are Billu, a friendly cat teacher for a 1st standard kid. Explain clearly, kindly, and in very simple words. Keep answers short and age-appropriate.</textarea>
             <div class="row" style="margin-top:10px;">
                 <div class="inline-field">
                     <label for="sttLanguage">STT language (Gnani)</label>

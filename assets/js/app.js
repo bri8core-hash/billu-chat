@@ -18,6 +18,65 @@
     const ttsLanguageEl = document.getElementById('ttsLanguage');
     const ttsSpeedEl = document.getElementById('ttsSpeed');
     const ttsSpeedValueEl = document.getElementById('ttsSpeedValue');
+    const personaSelect = document.getElementById('personaSelect');
+    const appTitleEl = document.getElementById('appTitle');
+    const personaImage = document.getElementById('personaImage');
+    const personaPhotoWrap = document.getElementById('personaPhotoWrap');
+    const photoMouth = document.getElementById('photoMouth');
+    const personaDesc = document.getElementById('personaDesc');
+    const catAvatarWrap = document.getElementById('catAvatarWrap');
+    const avatarStateLabel = document.getElementById('avatarStateLabel');
+
+    const PERSONAS = {
+        billu: {
+            name: 'Billu (Cat Teacher)',
+            type: 'cat',
+            description: 'Friendly cat teacher for kids.',
+            context: 'You are Billu, a friendly cat teacher for a 1st standard kid. Explain clearly, kindly, and in very simple words. Keep answers short and age-appropriate.',
+            tts: { model: 'timbre-v2.5', voice: 'Kaveri', language: 'en-IN', speed: 0.85 }
+        },
+        father: {
+            name: 'Father (Sandeep)',
+            type: 'image',
+            image: 'assets/images/sandeep.jpeg',
+            mouth: { top: '60%', left: '50%', width: '10%', height: '4%' },
+            description: 'Caring, practical, and supportive father figure.',
+            context: 'You are Sandeep, a caring and practical father. Speak warmly, encourage confidence, give clear guidance, and keep answers supportive and easy to understand. Offer sensible advice and reassurance when helpful.',
+            tts: { model: 'timbre-v3.0', voice: 'Prakash', language: 'en-IN', speed: 0.95 }
+        },
+        mother: {
+            name: 'Mother (Leelavati)',
+            type: 'image',
+            image: 'assets/images/lilavati.png',
+            mouth: { top: '59%', left: '52%', width: '10%', height: '4%' },
+            description: 'Loving, patient, and nurturing mother figure.',
+            context: 'You are Leelavati, a loving and patient mother. Speak gently with warmth and care, explain things simply, comfort when needed, and encourage with kindness.',
+            tts: { model: 'timbre-v3.0', voice: 'Vasudha', language: 'en-IN', speed: 0.9 }
+        },
+        teacher: {
+            name: 'Teacher',
+            type: 'image',
+            description: 'Patient teacher who explains concepts step by step.',
+            context: 'You are a patient and encouraging teacher. Explain concepts step by step in simple language, check understanding, give examples, and keep responses clear and structured.',
+            tts: { model: 'timbre-v2.5', voice: 'Nalini', language: 'en-IN', speed: 0.9 }
+        },
+        scientist: {
+            name: 'Scientist',
+            type: 'image',
+            description: 'Curious scientist who explains how things work.',
+            context: 'You are a curious and friendly scientist. Explain how and why things work using simple reasoning, observations, and examples. Encourage curiosity and keep explanations accurate but easy to understand.',
+            tts: { model: 'timbre-v3.0', voice: 'Shubham', language: 'en-IN', speed: 0.95 }
+        },
+        engineer: {
+            name: 'Engineer',
+            type: 'image',
+            description: 'Practical engineer focused on building and solving problems.',
+            context: 'You are a practical and clear-thinking engineer. Focus on how to build, fix, and solve problems step by step. Give structured, actionable explanations and keep them easy to follow.',
+            tts: { model: 'timbre-v3.0', voice: 'Avinash', language: 'en-IN', speed: 1.0 }
+        }
+    };
+
+    let currentPersonaId = 'billu';
 
     const TTS_VOICES = {
         'timbre-v2.5': [
@@ -67,6 +126,58 @@
         if (selected && selected.lang && ttsLanguageEl.querySelector('option[value="' + selected.lang + '"]')) {
             ttsLanguageEl.value = selected.lang;
         }
+    }
+
+    function applyPersona(id, clearHistory) {
+        const p = PERSONAS[id] || PERSONAS.billu;
+        currentPersonaId = id in PERSONAS ? id : 'billu';
+        if (contextEl) contextEl.value = p.context;
+        if (appTitleEl) appTitleEl.textContent = p.name + ' Chat';
+        if (personaDesc) personaDesc.textContent = p.description || '';
+        if (photoMouth) {
+            const m = p.mouth || {};
+            photoMouth.style.top = m.top || '72%';
+            photoMouth.style.left = m.left || '50%';
+            photoMouth.style.width = m.width || '16%';
+            photoMouth.style.height = m.height || '4%';
+        }
+        if (p.type === 'cat') {
+            if (catAvatarWrap) catAvatarWrap.style.display = '';
+            if (personaPhotoWrap) personaPhotoWrap.style.display = 'none';
+            if (personaImage) { personaImage.removeAttribute('src'); personaImage.alt = ''; }
+        } else {
+            if (catAvatarWrap) catAvatarWrap.style.display = 'none';
+            if (personaPhotoWrap) {
+                if (p.image) {
+                    if (personaImage) { personaImage.src = p.image; personaImage.alt = p.name; }
+                    personaPhotoWrap.style.display = '';
+                } else {
+                    if (personaImage) { personaImage.removeAttribute('src'); personaImage.alt = p.name; }
+                    personaPhotoWrap.style.display = 'none';
+                }
+            }
+        }
+        if (p.tts) {
+            if (ttsModelEl) ttsModelEl.value = p.tts.model || ttsModelEl.value;
+            syncTtsVoices(p.tts.voice);
+            if (p.tts.language && ttsLanguageEl && ttsLanguageEl.querySelector('option[value="' + p.tts.language + '"]')) {
+                ttsLanguageEl.value = p.tts.language;
+            }
+            if (p.tts.speed && ttsSpeedEl) {
+                ttsSpeedEl.value = String(p.tts.speed);
+                if (ttsSpeedValueEl) ttsSpeedValueEl.textContent = ttsSpeedEl.value + 'x';
+            }
+        }
+        if (clearHistory) {
+            history = [];
+            if (conversationEl) conversationEl.value = '';
+            if (player) { player.pause(); player.removeAttribute('src'); }
+            if (ttsAudioUrl) { URL.revokeObjectURL(ttsAudioUrl); ttsAudioUrl = null; }
+            if (replayBtn) { replayBtn.style.display = 'none'; replayBtn.disabled = false; }
+        }
+        setStatus('Persona set to ' + p.name + '. Ready.');
+        log('persona switched to ' + p.name);
+        setAvatarState('idle');
     }
     const micSelect = document.getElementById('micSelect');
     const testMicBtn = document.getElementById('testMicBtn');
@@ -125,7 +236,8 @@
         console.log(line);
     }
     function appendConversation(role, text) {
-        const label = role === 'user' ? 'You' : (role === 'assistant' ? 'Assistant' : 'System');
+        const p = PERSONAS[currentPersonaId] || PERSONAS.billu;
+        const label = role === 'user' ? 'You' : (role === 'assistant' ? p.name : 'System');
         conversationEl.value += label + ': ' + text + '\n\n';
         conversationEl.scrollTop = conversationEl.scrollHeight;
     }
@@ -574,7 +686,7 @@
                 setBusy(false);
                 return;
             }
-            setStatus('Generating speech with Gnani TTS…');
+            setStatus('Generating speech with Gnani TTSâ€¦');
             const model = ttsModelEl.value || 'timbre-v2.5';
             const voices = TTS_VOICES[model] || [];
             let voice = ttsVoiceEl.value || (voices[0] ? voices[0].value : 'Kaveri');
@@ -583,11 +695,13 @@
                 ttsVoiceEl.value = voice;
                 log('adjusted TTS voice to ' + voice + ' for model ' + model);
             }
+            const langSel = (ttsLanguageEl && ttsLanguageEl.value) ? ttsLanguageEl.value : '';
+            const ttsLang = (langSel && langSel !== 'auto') ? langSel : userLanguage;
             const ttsPayload = {
                 text: speakTextTrim,
                 model: model,
                 voice: voice,
-                language: userLanguage,
+                language: ttsLang,
                 speed: parseFloat(ttsSpeedEl.value)
             };
             const res = await fetch('index.php?action=tts', {
@@ -844,7 +958,6 @@
     const catPupilRight = document.getElementById('cat-pupil-right');
     const catEyelidLeft = document.getElementById('cat-eyelid-left');
     const catEyelidRight = document.getElementById('cat-eyelid-right');
-    const catStateLabel = document.getElementById('catStateLabel');
     let avatarState = 'idle';
     let avatarAudioCtx = null;
     let avatarAnalyser = null;
@@ -857,18 +970,37 @@
 
     function setAvatarState(state) {
         avatarState = state;
-        if (catAvatar) catAvatar.setAttribute('data-avatar-state', state);
-        if (catStateLabel) {
+        const p = PERSONAS[currentPersonaId] || PERSONAS.billu;
+        const speakingCat = (p.type === 'cat' && state === 'speaking');
+        if (catAvatar) catAvatar.setAttribute('data-avatar-state', speakingCat ? 'speaking' : (state === 'listening' && p.type === 'cat' ? 'listening' : 'idle'));
+        if (personaPhotoWrap && p.type === 'image') {
+            personaPhotoWrap.classList.toggle('speaking', state === 'speaking');
+        } else if (personaPhotoWrap) {
+            personaPhotoWrap.classList.remove('speaking');
+        }
+        if (avatarStateLabel) {
             const labels = { idle: 'Idle', listening: 'Listening…', thinking: 'Thinking…', speaking: 'Speaking…' };
-            catStateLabel.textContent = labels[state] || 'Idle';
+            avatarStateLabel.textContent = labels[state] || 'Idle';
         }
     }
 
     function setMouthOpen(level) {
-        if (!catMouth) return;
         const clamped = Math.max(0, Math.min(1, level || 0));
-        const sy = 0.18 + clamped * 3.2;
-        catMouth.setAttribute('transform', 'scale(1 ' + sy.toFixed(3) + ')');
+        const p = PERSONAS[currentPersonaId] || PERSONAS.billu;
+        if (p.type === 'cat') {
+            if (catMouth) {
+                const sy = 0.18 + clamped * 3.2;
+                catMouth.setAttribute('transform', 'scale(1 ' + sy.toFixed(3) + ')');
+            }
+            if (photoMouth) photoMouth.style.transform = 'translate(-50%, -50%) scaleY(0.2)';
+        } else {
+            if (photoMouth) {
+                const sy = 0.2 + clamped * 1.6;
+                const sx = 1 + clamped * 0.08;
+                photoMouth.style.transform = 'translate(-50%, -50%) scaleX(' + sx.toFixed(3) + ') scaleY(' + sy.toFixed(3) + ')';
+            }
+            if (catMouth) catMouth.setAttribute('transform', 'scale(1 0.18)');
+        }
     }
 
     function ensureAvatarAudioGraph() {
@@ -1012,10 +1144,16 @@
     sendTextBtn.addEventListener('click', () => { if (!busy) resumeAvatarAudio(); }, { capture: true });
     if (samplePrompts) samplePrompts.addEventListener('change', () => { resumeAvatarAudio(); }, { capture: true });
 
+    if (personaSelect) {
+        personaSelect.addEventListener('change', () => applyPersona(personaSelect.value, true));
+    }
+
     window.addEventListener('beforeunload', () => { cleanupStream(); if (testAmpHandle) closeAmplifiedStream(testAmpHandle); if (recAmpHandle) closeAmplifiedStream(recAmpHandle); stopMouthLoop(); if (avatarBlinkTimer) clearTimeout(avatarBlinkTimer); if (avatarPupilTimer) clearTimeout(avatarPupilTimer); if (avatarAudioCtx) { avatarAudioCtx.close().catch(()=>{}); } });
     syncTtsVoices('Kaveri');
+    if (personaSelect) personaSelect.value = 'billu';
+    applyPersona('billu', false);
     populateMicDevices(false);
     startEyeAnimation();
     updateRecordButton();
     setAvatarState('idle');
-    log('demo ready (mic diagnostics integrated, cat avatar enabled)');
+    log('demo ready (persona support enabled)');
